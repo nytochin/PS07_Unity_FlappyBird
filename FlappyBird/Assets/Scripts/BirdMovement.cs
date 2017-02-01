@@ -4,15 +4,16 @@ using System.Collections;
 public class BirdMovement : MonoBehaviour {
 
     Vector3 velocity = Vector3.zero;
-    public Vector3 gravity;
-    public Vector3 flapVelocity;
-    public float maxSpeed = 5f;
-    public float forwardSpeed = 1f;
+    public float flapSpeed;
+    public float forwardSpeed;
+
     bool didFlap = false;
+    bool dead = false;
+    Animator animator;
 
 	// Use this for initialization
 	void Start () {
-	
+        animator = transform.GetComponentInChildren<Animator>();
 	}
 
     // Do graphic & input updates here
@@ -21,32 +22,43 @@ public class BirdMovement : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
         {
             didFlap = true;
+            animator.SetTrigger("DoFlap");
         }
     }
 	
 	// Do physics engine update here
 	void FixedUpdate () {
-        velocity.x = forwardSpeed;
-        velocity += gravity * Time.deltaTime;
+        if (dead)
+        {
+            return;
+        }
+
+        if (GetComponent<Rigidbody2D>().velocity.x < 1f)
+        {
+            GetComponent<Rigidbody2D>().AddForce(Vector2.right * forwardSpeed);
+        }
+        Debug.Log(GetComponent<Rigidbody2D>().velocity.x);
         if (didFlap)
         {
+            GetComponent<Rigidbody2D>().AddForce(Vector2.up * flapSpeed);
             didFlap = false;
-            if (velocity.y < 0)
-            {
-                velocity.y = 0;
-            }
-            velocity += flapVelocity;
         }
 
-        velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
-        transform.position += velocity * Time.deltaTime;
-
-        float angle = 0f;
-        if (velocity.y < 0)
+        if (GetComponent<Rigidbody2D>().velocity.y > 0)
         {
-            angle = Mathf.Lerp(0, -90, -velocity.y / maxSpeed);
+            transform.rotation = Quaternion.Euler(0, 0, 0);
+        }
+        else
+        {
+            float angle = Mathf.Lerp(0, -90, -GetComponent<Rigidbody2D>().velocity.y / 3f);
+            transform.rotation = Quaternion.Euler(0, 0, angle);
         }
 
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        animator.SetTrigger("Death");
+        dead = true;
     }
 }
