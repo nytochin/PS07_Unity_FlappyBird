@@ -11,6 +11,8 @@ public class BirdMovement : MonoBehaviour {
     bool dead = false;
     Animator animator;
 
+    public bool godMode = false;
+
 	// Use this for initialization
 	void Start () {
         animator = transform.GetComponentInChildren<Animator>();
@@ -58,6 +60,10 @@ public class BirdMovement : MonoBehaviour {
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (godMode)
+        {
+            return;
+        }
         animator.SetTrigger("Death");
         dead = true;
     }
